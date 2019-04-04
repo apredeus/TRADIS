@@ -50,6 +50,8 @@ Get your strain's reference genome and GFF and place it in your WDIR.
 
 Get your barcodes and make a fasta file with them, name it **barcodes.fa**. Your barcodes should contain both Illumina index and transposon sequence, as illustrated below: 
 
+<img src="https://github.com/apredeus/TRADIS/blob/master/img/barcodes.png">
+
 ~~~barcodes.fa
 >P125109_input_LB_1
 CGTGATGCTTCAGGGTTGAGATGTGTATAAGAGACAG
@@ -210,6 +212,7 @@ bedtools bamtobed -i $i | awk '{if ($6=="+") {print $1"\t"$2"\t"$2"\t+"} else {p
 
 Resulting files should generate the following picture once properly set up in JBrowse:
 
+<img src="https://github.com/apredeus/TRADIS/blob/master/img/jbrowse.png">
 
 ## DESeq2 analysis
 
@@ -243,6 +246,6 @@ cond   <- read.table("Conditions.txt",header=T,row.names=1)
 dds    <- DESeqDataSetFromMatrix(countData=round(exp,0),colData=cond,design = ~ Condition)
 deseq  <- DESeq(dds)
 res    <- results(deseq, contrast=c("Condition","RAW_pass1","Input"))
+```
 
 This should generate the table with DESeq2 data. 
-```
