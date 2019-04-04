@@ -52,14 +52,20 @@ Get your barcodes and make a fasta file with them, name it **barcodes.fa**. Your
 
 <img src="https://github.com/apredeus/TRADIS/blob/master/img/barcodes.png">
 
+Hence, barcodes file should look like this (each sequence named after the sample it is found in): 
+
 ~~~barcodes.fa
 >P125109_input_LB_1
-CGTGATGCTTCAGGGTTGAGATGTGTATAAGAGACAG
+TACAAGGCTTCAGGGTTGAGATGTGTATAAGAGACAG
 >P125109_input_LB_2
-GCCTAAGCTTCAGGGTTGAGATGTGTATAAGAGACAG
+GATCTGGCTTCAGGGTTGAGATGTGTATAAGAGACAG
 >P125109_output_LB_10h_1
-ACATCGGCTTCAGGGTTGAGATGTGTATAAGAGACAG
+CGTGATGCTTCAGGGTTGAGATGTGTATAAGAGACAG
 >P125109_output_LB_10h_2
+CACTGTGCTTCAGGGTTGAGATGTGTATAAGAGACAG
+>P125109_output_MAC_1
+AAGCTAGCTTCAGGGTTGAGATGTGTATAAGAGACAG
+>P125109_output_MAC_2
 TGGTCAGCTTCAGGGTTGAGATGTGTATAAGAGACAG
 ~~~
 
@@ -170,7 +176,9 @@ CHROM is the STR.chrom.sizes file (tab separated chrom name - chrom size), gener
 
 ## Biotradis
 
-Now to the fun part. In order to get biotradis processing to work, and to be consistent with the rest of the pipeline, the following tricks were used: 
+Biotradis [has a useful tutorial available](https://www.researchgate.net/publication/309897933_Supplementary_Data/data/5825bfff08ae61258e460737/supp-btw022-BioTraDISTutorial.pdf). 
+
+In order to get biotradis processing to work, and to be consistent with the rest of the pipeline, the following tricks were used: 
 
 * artificial tag TAAGAGACAG is added to every cutadapt-demultiplexed fastq file 
 * bacteria_tradis then ran on the resulting (single-end) files to match the introduced tag and to align the reads
