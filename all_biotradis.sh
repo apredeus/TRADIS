@@ -42,4 +42,11 @@ do
   tradis_gene_insert_sites -trim3 0.1 $EMBL $i
 done
 
-echo "ALL DONE!" 
+QQ=`ls *_chr.tradis_gene_insert_sites.csv | grep $STR`
+for i in $QQ
+do
+  echo "Essentiality analysis for sample $i"
+  tradis_essentiality.R $i 
+done
+
+echo "BIOTRADIS: ALL DONE!" 
