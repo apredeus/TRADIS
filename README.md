@@ -19,7 +19,7 @@ To get started, you need to install:
 * samtools
 * bedtools
 * Picard tools
-* GFF
+* EMBLmyGFF3
 
 You will also need Perl and R/Rscript with DESeq2 installed.
 
