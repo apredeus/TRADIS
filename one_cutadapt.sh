@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source activate tradis
+conda activate tradis
 
 R1="ls raw/* | tr '\n' '\t' | cut -f 1"
 R2="ls raw/* | tr '\n' '\t' | cut -f 2"
