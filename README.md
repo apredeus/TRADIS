@@ -1,35 +1,33 @@
 # TRADIS
-In-house pipeline for processing of TIS/TRADIS data
+In-house pipeline for processing of TIS/TRADIS data. Version 2 has Bio::Tradis dependency removed, and does not require annotation in EMBL format. 
 
-This pipeline is based on Bio::Tradis and DESeq2 and allows to perform essentiality analysis, relative fitness analysis, and visualization in JBrowse. Based on the custom pipeline developed by Roy Chaudhuri (r.chaudhuri at sheffield.ac.uk). 
+This allows to perform essentiality analysis, relative fitness analysis, and visualization in JBrowse. Based on the custom pipeline developed by Roy Chaudhuri (r.chaudhuri at sheffield.ac.uk).
 
 ## Author
 [Alexander Predeus](https://www.researchgate.net/profile/Alexander_Predeus), [Jay Hinton Laboratory](http://www.hintonlab.com/), [University of Liverpool](https://www.liverpool.ac.uk/)
 
 (c) 2019, GPL v3 license
 
-## Getting started 
+## Installation 
 
 To get started, you need to install: 
 
-* Bio::Tradis
 * bwa
-* featureCounts (subread package)
+* featureCounts (from Subread package)
 * cutadapt
 * samtools
 * bedtools
 * Picard tools
-* EMBLmyGFF3
 
 You will also need Perl and R/Rscript with DESeq2 installed.
 
 It is convenient to install most of the dependencies using bioconda. 
 
 ```bash 
-conda create -n tradis python=3.6
+conda create -n tradis
 source activate tradis
-conda install cutadapt
 conda install bwa
+conda install cutadapt
 conda install subread  
 conda install samtools 
 conda install bedtools
@@ -69,32 +67,16 @@ AAGCTAGCTTCAGGGTTGAGATGTGTATAAGAGACAG
 TGGTCAGCTTCAGGGTTGAGATGTGTATAAGAGACAG
 ~~~
 
-## Annotation formats 
+## Annotation requirements
 
-There are many flavours of GFF annotation files, and they all stink. There is an impressive lack of any standards about what has to be included into GFF file. In order to for this pipeline to run smoothly, you would need two things:
-
-* tradis-friendly version of the GFF file
-* same annotation in EMBL format
-
-In order to get the first one, you need a GFF in which 1) all the features you care about will be listed as a "gene"; 2) each gene is identified by its locus_tag, e.g. ID=STMMW_00001, or locus_tag=STMMW_00001. 
+Annotation in GFF3 format needs to be processed in such way that 1) all the features of interest are listed as a "gene"; 2) each gene is identified by its locus_tag, e.g. ID=STMMW_00001, or locus_tag=STMMW_00001. 
 
 The exact conversion command would be dependent on the starting GFF. Example of commands I've used for Enteritidis strains: 
 
 ```bash 
-perl -ne 's/\tCDS\t/\tgene\t/g; s/\tncRNA\t/\tgene\t/g; s/\trRNA\t/\tgene\t/g; s/\ttRNA\t/\tgene\t/g; s/\ttmRNA\t/\tgene\t/g; print' D7795_v1_2018.gff > D7795_v1_2018.tradis.gff 
-perl -ne 's/\tCDS\t/\tgene\t/g; s/\tncRNA\t/\tgene\t/g; s/\trRNA\t/\tgene\t/g; s/\ttRNA\t/\tgene\t/g; s/\ttmRNA\t/\tgene\t/g; print' P125109_v1_2018.gff > P125109_v1_2018.tradis.gff
+perl -ne '@t=split/\t/; s/\tt[2]\t/\tgene\t/g; print' D7795_v1_2018.gff > D7795_v1_2018.tradis.gff 
+perl -ne '@t=split/\t/; s/\tt[2]\t/\tgene\t/g; print' P125109_v1_2018.gff > P125109_v1_2018.tradis.gff 
 ```
-
-For EMBL-based annotation, you would need a tool named [EMBLmyGFF3](https://github.com/NBISweden/EMBLmyGFF3), or any other that works for you. Installation should be as simple as `pip install --user git+https://github.com/NBISweden/EMBLmyGFF3.git`, but don't do it inside *tradis* virtual environment - pip often 'sees' other python dependencies outside of the env, which breaks everything. 
-
-Run the conversion using the following command: 
-
-```bash 
-EMBLmyGFF3 STR.tradis.gff STR.fa > STR.embl
-```
-You will be asked a series of questions. Most of these don't make any difference. Use empty locus_tag (program would add XXX\_ to already existing ones!), and '11' for translation table. After this, replace XXX\_ with empty string using your favourite text editor.
-
-If you want gene common names included in the CSV produced by Bio::Tradis, make sure you have 'gene=thrA' entries in the original GFF. 
 
 ## Demultiplexing
 
@@ -102,10 +84,10 @@ Demultiplexing is unfortunately not parallelized, so it's quite slow. Run it lik
 
 `./run_cutadapt.sh` 
 
-Cutadapt options used are as follows. Adapter is expected on the 5' (-g), and at least 34 nt have to be matched (otherwise you get garbage matches of e.g. 3 nt). Default error rate is 0.1, so 3 mismatches over 37 nt sequence are allowed. 
+Cutadapt options used are as follows. Adapter is expected on the 5' (-g), and at least 34 nt have to be matched (otherwise you get garbage matches, e.g. 3 nt long). Default error rate is 0.1, so 3 mismatches over 37 nt sequence are allowed. 
 
 ```bash
-cutadapt -O 34 -g file:$BC $R1 $R2 -o fastqs/{name}.R1.fastq.gz -p fastqs/{name}.R2.fastq.gz --discard-untrimmed
+cutadapt -O 34 -g file:$BC $R1 $R2 -o fastqs/$TAG.R1.fastq.gz -p fastqs/$TAG.R2.fastq.gz --discard-untrimmed
 ```
 
 This should generate the demultiplexed fastq files in WDIR/fastqs.
@@ -155,7 +137,7 @@ To get all gene counts, simply run
 Actual commands being run: 
 
 ```bash 
-featureCounts -t gene -g ID -s 0 -a $GFF -o ${i%%.1nt_rmdup.bam}.fc.tsv $i
+featureCounts -t gene -g ID -s 0 -a $GFF -o $TAG.fc.tsv $TAG.1nt_rmdup.bam
 ```
 One-nucleotide single-end read BAM file (\*.1nt_rmdup.bam) are used to get gene counts. Quantification is not strand-specific, is calculated per gene feature, and summarized per locus tag (ID). Make sure the logs say that the number of features and meta-features is the same in your GFF, and equals to the number of genes you expect to get. 
 
@@ -168,8 +150,8 @@ In order to get visualization, you need coverage tracks in bigWig format. To obt
 Actual commands being run: 
 
 ```bash 
-bedtools genomecov -ibam $i -bg > ${i%%.filt.bam}.bedGraph
-bedGraphToBigWig $i $CHROM ${i%%.bedGraph}.bw
+bedtools genomecov -ibam $$TAG.filt.bam -bg > $TAG.bedGraph
+bedGraphToBigWig $TAG.bedGraph $CHROM $TAG.bw
 ```
 
 CHROM is the STR.chrom.sizes file (tab separated chrom name - chrom size), generated from your reference fasta, STR.fa. 
