@@ -1,4 +1,4 @@
-# TRADIS
+# TraDIS processing pipeline
 In-house pipeline for processing of TIS/TRADIS data. Version 2 has Bio::Tradis dependency removed, and does not require annotation in EMBL format. 
 
 This allows to perform essentiality analysis, relative fitness analysis, and visualization in JBrowse. Based on the custom pipeline developed by Roy Chaudhuri (r.chaudhuri at sheffield.ac.uk).
@@ -10,18 +10,7 @@ This allows to perform essentiality analysis, relative fitness analysis, and vis
 
 ## Installation 
 
-To get started, you need to install: 
-
-* bwa
-* featureCounts (from Subread package)
-* cutadapt
-* samtools
-* bedtools
-* Picard tools
-
-You will also need Perl and R/Rscript with DESeq2 installed.
-
-It is convenient to install most of the dependencies using bioconda. 
+To get started, you need to install: bwa, featureCounts/Subread, cutadapt, samtools, bedtools, Picard tools. You will also need Perl and R with DESeq2, ggplot2, MASS, and crayon libraries installed. It is convenient to install most of the terminal dependencies using bioconda (R and appropriate libraries would need to be installed separately). 
 
 ```bash 
 conda create -n tradis
@@ -37,16 +26,10 @@ conda install picard
 Choose a working directory with enough space (WDIR) and run 
 ```bash 
 cd $WDIR
-mkdir raw fastqs bams counts biotradis browser logs 
+mkdir raw fastqs bams counts stats browser logs 
 ```
 
-Put your HiSeq data (e.g. the whole lane of HiSeq sequencing) into WDIR/raw. Clone this repo and copy all the scripts into WDIR. 
-
-Replace tradis_essentiality.R (find it with `which tradis_essentiality.R`) with one from my repo. 
-
-Get your strain's reference genome and GFF and place it in your WDIR. 
-
-Get your barcodes and make a fasta file with them, name it **barcodes.fa**. Your barcodes should contain both Illumina index and transposon sequence, as illustrated below: 
+Put your HiSeq data (e.g. the whole lane of HiSeq sequencing) into WDIR/raw. Clone this repo and copy all the scripts into WDIR. Get your strain (strains) reference genome and annotation in GFF3 format and place it in your WDIR. Get your barcodes and make a fasta file with them, name it **barcodes.fa**. Your barcodes should contain both Illumina index and transposon sequence, as illustrated below: 
 
 <img src="https://github.com/apredeus/TRADIS/blob/master/img/barcodes.png">
 
@@ -67,16 +50,11 @@ AAGCTAGCTTCAGGGTTGAGATGTGTATAAGAGACAG
 TGGTCAGCTTCAGGGTTGAGATGTGTATAAGAGACAG
 ~~~
 
-## Annotation requirements
+## Annotation processing
 
-Annotation in GFF3 format needs to be processed in such way that 1) all the features of interest are listed as a "gene"; 2) each gene is identified by its locus_tag, e.g. ID=STMMW_00001, or locus_tag=STMMW_00001. 
+Annotation in GFF3 format needs to be processed in such way that 1) all the features of interest are listed as a "gene". If your original GFF file was called STR.gff, this file is named STR.tradis.gff. Additionally, we make another GFF file for essentiality analysis - same as STR.tradis.gff, but with last 10% of the gene removed (equivalent of -trim3 0.1 options in Bio-Tradis). This file would be named STR.ess_90.gff. This (and bwa index building) is done by running the following script: 
 
-The exact conversion command would be dependent on the starting GFF. Example of commands I've used for Enteritidis strains: 
-
-```bash 
-perl -ne '@t=split/\t/; s/\tt[2]\t/\tgene\t/g; print' D7795_v1_2018.gff > D7795_v1_2018.tradis.gff 
-perl -ne '@t=split/\t/; s/\tt[2]\t/\tgene\t/g; print' P125109_v1_2018.gff > P125109_v1_2018.tradis.gff 
-```
+`./make_refs.sh`
 
 ## Demultiplexing
 
@@ -94,11 +72,11 @@ This should generate the demultiplexed fastq files in WDIR/fastqs.
 
 ## Alignment and duplicate removal 
 
-Make bwa index of the reference genome (STR.fa): 
+Running make_refs.sh should have already built bwa index of all reference genomes (STR.fa). If not, create them by running
 
 `bwa index STR.fa`
 
-After this, alignment is done using **bwa**, and duplicates are removed using **picard MarkDuplicates**. Run it with 
+After this, alignment is done using **bwa**. Run it with 
 
 `./all_bwa.sh STR.fa`
 
@@ -106,10 +84,8 @@ Actual commands being run are as follows:
 
 ```bash 
 bwa mem -t 16 $REF $R1 $R2 | samtools sort -O BAM - > $TAG.bam
-samtools index $TAG.bam
-picard MarkDuplicates I=$TAG.bam O=$TAG.rmdup.bam M=$TAG.metrics.out REMOVE_DUPLICATES=true &> $TAG.rmdup.log
 ```
-This generates two BAM files per each sample - one simple alignment, and one with duplicates removed. More processing will follow.
+This generates one BAM file per sample. More processing will follow.
 
 ## Additional BAM processing 
 

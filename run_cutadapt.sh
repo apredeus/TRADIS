@@ -1,6 +1,6 @@
 #!/bin/bash
 
-conda activate tradis
+## conda activate tradis - see setup instruction on https://github.com/apredeus/TRADIS
 
 R1="ls raw/* | tr '\n' '\t' | cut -f 1"
 R2="ls raw/* | tr '\n' '\t' | cut -f 2"
