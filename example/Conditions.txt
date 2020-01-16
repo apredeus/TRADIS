@@ -1,0 +1,7 @@
+Sample	Condition
+D7795_input_LB_1	Input
+D7795_input_LB_2	Input
+D7795_output_LB_10h_1	Output
+D7795_output_LB_10h_2	Output
+D7795_output_MAC_1	Macro
+D7795_output_MAC_2	Macro

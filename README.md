@@ -10,7 +10,7 @@ This allows to perform essentiality analysis, relative fitness analysis, and vis
 
 ## Installation 
 
-To get started, you need to install: bwa, featureCounts/Subread, cutadapt, samtools, bedtools, Picard tools. You will also need Perl and R with DESeq2, ggplot2, MASS, and crayon libraries installed. It is convenient to install most of the terminal dependencies using bioconda (R and appropriate libraries would need to be installed separately). 
+To get started, you need to install: bwa, featureCounts/Subread, cutadapt, samtools, bedtools, Picard tools, and deepTools. You will also need Perl and R with DESeq2, ggplot2, MASS, and crayon libraries installed. It is convenient to install most of the terminal dependencies using bioconda (R and appropriate libraries would need to be installed separately). 
 
 ```bash 
 conda create -n tradis
@@ -21,6 +21,7 @@ conda install subread
 conda install samtools 
 conda install bedtools
 conda install picard 
+conda install deeptools 
 ```
 
 Choose a working directory with enough space (WDIR) and run 
@@ -50,7 +51,9 @@ AAGCTAGCTTCAGGGTTGAGATGTGTATAAGAGACAG
 TGGTCAGCTTCAGGGTTGAGATGTGTATAAGAGACAG
 ~~~
 
-## Annotation processing
+## Reference and annotation
+
+Experiments for several strains can be processed at once. Each strain needs to have genome assembly (STR.fa) and annotation in GFF3 format (STR.gff). Each meaningful feature should have a locus tag. Prokka GFF
 
 Annotation in GFF3 format needs to be processed in such way that 1) all the features of interest are listed as a "gene". If your original GFF file was called STR.gff, this file is named STR.tradis.gff. Additionally, we make another GFF file for essentiality analysis - same as STR.tradis.gff, but with last 10% of the gene removed (equivalent of -trim3 0.1 options in Bio-Tradis). This file would be named STR.ess_90.gff. This (and bwa index building) is done by running the following script: 
 

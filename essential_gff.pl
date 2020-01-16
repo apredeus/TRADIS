@@ -1,64 +1,44 @@
 #!/usr/bin/env perl 
+#
+# v2 just uses TSV essentiality table generated in R 
 
 use strict; 
 use warnings; 
-use Data::Dumper; 
 
-my $param = shift @ARGV; 
-my $gff = shift @ARGV; 
+my $sample = shift @ARGV;   ## Sample name in the essentiality table 
+my $tsv = shift @ARGV;      ## STR.ann_ess.tsv 
+my $gff = shift @ARGV;      ## STR.tradis.gff 
 
-my $essen; 
-my $ambig; 
-my $genes = {}; 
 
-my $csv = $param; 
-my $tag = $param; 
-$csv =~ s/.param.out//g; 
-$tag =~ s/.tag.out.gz.*//g;
-
-open PARAM,"<",$param or die "$!"; 
+open TSV,"<",$tsv or die "$!"; 
 open GFF,"<",$gff or die "$!"; 
-open CSV,"<",$csv or die "$!"; 
 
-while (<PARAM>) { 
-  chomp; 
-  if (! m/essen/) {
-    $essen = (split/\t/)[0]; 
-    $ambig = (split/\t/)[1];
-  } 
+my $ESS = {}; 
+my $index;                  ## column of our sample 
+
+while (<TSV>) { 
+  chomp;
+  my @t = split /\t/; 
+  if (m/ins_count/) { 
+    for (my $i=0; $i < scalar @t; $i++) { 
+      $index = $i if ($t[$i] eq $sample.".ins_count");
+    } 
+    print STDERR "Index for sample $sample is $index.\n"; 
+  } else {
+    my $id = $t[0]; 
+    $ESS->{$id}->{ic} = $t[$index]; 
+    $ESS->{$id}->{ii} = $t[$index+1]; 
+    $ESS->{$id}->{type} = $t[$index+2];
+  }  
 } 
-
-print STDERR "Processing sample $tag; essentiality cutoff is $essen, ambiguous cutoff is $ambig\n"; 
-
-<CSV>; 
-while (<CSV>) { 
-  chomp; 
-  my @t = split /\t/;
-
-  my $id = ($t[0] =~ m/([A-Z0-9]+_\d+)_?/) ? $1 : $t[0]; ## biotradis does weird shit with tRNA/rRNA locus tags 
-  my $type = "non-essential"; 
-
-  if ($t[7] < $essen) { 
-    $type = "essential"; 
-  } elsif ($t[7] < $ambig) { 
-    $type = "ambiguous"; 
-  }
- 
-  $genes->{$id}->{ii} = $t[7]; 
-  $genes->{$id}->{type} = $type;
-}
-
-#print Dumper $genes; 
 
 while (<GFF>) {
   chomp; 
   $_ =~ s/;$//g;  
   m/\tID=(.*?);/; 
   my $id = $1; 
-#  printf STDERR "DEBUG: %s %s %s\n",$id,$genes->{$id}->{ii},$genes->{$id}->{type};
-  printf "%s;ins_index=%.5f;tradis_type=%s\n",$_,$genes->{$id}->{ii},$genes->{$id}->{type}; 
+  printf "%s;ins_index=%.5f(%d);tradis_type=%s\n",$_,$ESS->{$id}->{ii},$ESS->{$id}->{ic},$ESS->{$id}->{type};
 }
 
-close PARAM; 
-close GFF; 
-close CSV;  
+close TSV; 
+close GFF;  
