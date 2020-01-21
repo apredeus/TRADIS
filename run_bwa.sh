@@ -6,7 +6,7 @@ STR=${REF%%_*}
 cd fastqs 
 KK=`ls | grep $STR | grep R1`
 ## this is done in case you have more than 1 strain 
-## in our case, two strains (P125109 and D7795) were pro
+## in our case, two strains (P125109 and D7795) were processed in parallel
 
 for i in $KK
 do
