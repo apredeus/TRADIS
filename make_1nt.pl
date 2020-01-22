@@ -5,19 +5,28 @@ use warnings;
 
 while (<>) { 
   if (m/^@/) { 
+    ## simply print if header
     print; 
     next; 
-  } 
+  }
 
+  chomp;  
   my @t = split /\t/; 
-  s/\t$t[5]\t$t[6]\t$t[7]\t$t[8]\t/\t1M\t*\t0\t0\t/; 
+  ## following processing is clumsy but avoids special character mess that happens in qual string 
+ 
+  my $read = shift @t;
+  my $flag = shift @t; 
+  my $chr  = shift @t; 
+  my $pos  = shift @t; 
+  my $mapq = shift @t; 
+  my $cigar = shift @t;
+  my $rn   = shift @t; 
+  my $pn   = shift @t; 
+  my $tlen = shift @t;
+  my $seq  = shift @t;
+  my $qual = shift @t; 
   
-  my $flag = $t[1]; 
-  my $chr = $t[2]; 
-  my $pos = $t[3];
-  my $cigar = $t[5]; 
-  my $seq = $t[9]; 
-  my $qual = $t[10]; 
+  my $rest = join "\t",@t; 
 
   if ($flag&16) { 
     ## things get quite tricky when you are on (-) strand
@@ -25,17 +34,13 @@ while (<>) {
     $pos = $pos + ref_length($cigar) - 1; 
     $seq = substr($seq,-1,1); 
     $qual = substr($qual,-1,1); 
-    s/\t$t[1]\t$t[2]\t$t[3]\t/\t$flag\t$chr\t$pos\t/; 
-    s/\t$t[9]\t$t[10]\t/\t$seq\t$qual\t/; 
   } else { 
     $flag = 0; 
     $seq = substr($seq,0,1);
     $qual = substr($qual,0,1);
-    s/\t$t[1]\t$t[2]\t$t[3]\t/\t$flag\t$chr\t$pos\t/; 
-    s/\t$t[9]\t$t[10]\t/\t$seq\t$qual\t/;
   } 
-
-  print; 
+  # well..  
+  print "$read\t$flag\t$chr\t$pos\t$mapq\t1M\t*\t0\t0\t$seq\t$qual\t$rest\n";
 } 
 
 sub ref_length {

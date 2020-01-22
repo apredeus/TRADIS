@@ -14,10 +14,11 @@ do
   echo "BWA: Processing sample $TAG.." 
   R1=$i
   R2=$TAG.R2.fastq.gz
-  bwa mem -t 16 $REF $R1 $R2 | samtools sort -@16 -O BAM - > $TAG.bam & 
+  bwa mem -t 16 $REF $R1 $R2 | samtools sort -@16 -O BAM - > $TAG.bam &> $TAG.bwa.log & 
 done 
 wait 
 
 mv $STR*bam ../bams 
+mv *log ../logs 
 
 echo "BWA PAIRED-END ALIGNMENT: ALL DONE!"
