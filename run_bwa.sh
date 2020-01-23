@@ -1,10 +1,10 @@
 #!/bin/bash 
 
-REF=$1  ## reference genome fasta 
-STR=${REF%%_*}
+STR=$1  ## reference genome should be named STR.fa 
+PREFIX=${STR%%_*}
 
 cd fastqs 
-KK=`ls | grep $STR | grep R1`
+KK=`ls | grep $PREFIX | grep R1`
 ## this is done in case you have more than 1 strain 
 ## in our case, two strains (P125109 and D7795) were processed in parallel
 
@@ -18,7 +18,7 @@ do
 done 
 wait 
 
-mv $STR*bam ../bams 
-mv *log ../logs 
+mv $PREFIX*bam ../bams 
+mv $PREFIX*log ../logs 
 
 echo "BWA PAIRED-END ALIGNMENT: ALL DONE!"

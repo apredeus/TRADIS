@@ -39,6 +39,6 @@ write.table(deseq_table,file="D7795.ann_deseq.tsv",sep="\t",quote=F,row.names=F)
 
 ## essenitality analysis - see calculate_essentiality function for details 
 
-ess_table <- make_ess_table("D7795")
+ess_table <- make_ess_table("D7795",200)
 ess_table <- merge(ann[,c(1,6)],ess_table,by="row.names")
 write.table(ess_table,file="D7795.ann_ess.tsv",sep="\t",quote=F,row.names=F)
