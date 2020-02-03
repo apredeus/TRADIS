@@ -2,6 +2,7 @@
 
 STR=$1  ## reference genome should be named STR.fa 
 PREFIX=${STR%%_*}
+REF=`pwd`/$STR.fa
 
 cd fastqs 
 KK=`ls | grep $PREFIX | grep R1`
@@ -14,7 +15,8 @@ do
   echo "BWA: Processing sample $TAG.." 
   R1=$i
   R2=$TAG.R2.fastq.gz
-  bwa mem -t 16 $REF $R1 $R2 | samtools sort -@16 -O BAM - > $TAG.bam &> $TAG.bwa.log & 
+  bwa mem -t 8 $REF $R1 $R2 | samtools sort -@8 -O BAM - > $TAG.bam &
+  while [ $(jobs | wc -l) -ge 8 ] ; do sleep 10; done 
 done 
 wait 
 
